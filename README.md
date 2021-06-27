@@ -1,6 +1,4 @@
 # Introduction
-This is an implementation of MMHC in python. All data sets are placed in the "Input" folder and the results are generated to
-the "Output" folder. 
+This is a project which aims to solve missing value problems in Hill-Climbing algorithm. We provide four methods to handle missing values which are list-wise deletion (lw), pair-wise deletion (pw), inverse probability weighting (ipw) and adaptive inverse probability weighting (aipw).
 
-If you want to test your own data set, just put it in the "Input" folder and change the corresponding variable in 
-"BN_structure_learning" file which is also an example file for running the code.
+If you want to test our algorithm on your own data set, please put your data and network in the "data" and "network" folder respectively, and change the corresponding variable in "BN_structure_learning" file which is also an example file for running the code.
