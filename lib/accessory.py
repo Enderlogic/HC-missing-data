@@ -1,6 +1,7 @@
-<<<<<<< HEAD
 import itertools
+import random
 import pingouin as pg
+from copy import deepcopy
 
 import numpy as np
 from graphviz import Digraph
@@ -15,6 +16,103 @@ base, bnlearn = importr('base'), importr('bnlearn')
 from rpy2.robjects import pandas2ri
 
 pandas2ri.activate()
+random.seed(941214)
+
+
+# create missing mechanism
+def miss_mechanism(dag, noise='MAR', rom=0.5):
+    '''
+
+    :param dag: true DAG
+    :param noise: type of missing mechanism
+    :param rom: ratio of missing variables
+    :return: missing mechanism
+    '''
+    cause_dict = {}
+    if noise == 'MCAR':
+        vars_miss = random.sample(list(bnlearn.nodes(dag)), round(len(bnlearn.nodes(dag)) * rom))
+        for var in vars_miss:
+            cause_dict[var] = []
+    elif noise == 'MAR':
+        varnames = list(bnlearn.nodes(dag))
+        nom = round(len(varnames) * rom)
+        noc = len(varnames) - nom
+        vstructs = np.array(bnlearn.vstructs(dag))
+        vstructs = vstructs.reshape(3, int(len(vstructs) / 3))
+        vars_miss = []
+        vars_comp = []
+        for i in range(vstructs.shape[1]):
+            if len(vars_comp) != noc or (len(vars_comp) == noc and vstructs[1, i] in vars_comp):
+                if vstructs[0, i] not in vars_miss + vars_comp:
+                    cause_dict[vstructs[0, i]] = [vstructs[1, i]]
+                    vars_miss.append(vstructs[0, i])
+                    vars_comp = list(set(vars_comp + [vstructs[1, i]]))
+                elif vstructs[2, i] not in vars_miss + vars_comp:
+                    cause_dict[vstructs[2, i]] = [vstructs[1, i]]
+                    vars_miss.append(vstructs[2, i])
+                    vars_comp = list(set(vars_comp + [vstructs[1, i]]))
+                if len(vars_miss) == nom:
+                    break
+        if len(vars_miss) < nom:
+            vars_miss2 = random.sample([x for x in varnames if x not in vars_miss + vars_comp], nom - len(vars_miss))
+            vars_comp = [x for x in varnames if x not in vars_miss + vars_miss2]
+            for var in vars_miss2:
+                nbr = list(bnlearn.nbr(dag, var))
+                if any(item in vars_comp for item in nbr):
+                    cause_dict[var] = random.sample([x for x in nbr if x in vars_comp], 1)
+                else:
+                    cause_dict[var] = random.sample(vars_comp, 1)
+    elif noise == 'MNAR':
+        varnames = list(bnlearn.nodes(dag))
+        nom = round(len(varnames) * rom)
+        vstructs = np.array(bnlearn.vstructs(dag))
+        vstructs = vstructs.reshape(3, int(len(vstructs) / 3))
+        vars_miss = []
+        for i in range(vstructs.shape[1]):
+            if vstructs[0, i] not in cause_dict:
+                cause_dict[vstructs[0, i]] = [vstructs[1, i]]
+                vars_miss = list(set(vars_miss + [vstructs[0, i], vstructs[1, i]]))
+            elif vstructs[2, i] not in cause_dict:
+                cause_dict[vstructs[2, i]] = [vstructs[1, i]]
+                vars_miss = list(set(vars_miss + [vstructs[2, i], vstructs[1, i]]))
+            if len(vars_miss) >= nom:
+                break
+        if len(vars_miss) < nom:
+            vars_miss2 = random.sample([x for x in varnames if x not in vars_miss], nom - len(vars_miss))
+            vars_comp = [x for x in varnames if x not in vars_miss + vars_miss2]
+            for var in vars_miss2:
+                nbr = list(bnlearn.nbr(dag, var))
+                if any(item not in vars_comp for item in nbr):
+                    cause_dict[var] = random.sample([x for x in nbr if x not in vars_comp + [var]], 1)
+                else:
+                    cause_dict[var] = random.sample([x for x in varnames if x not in vars_comp + [var]], 1)
+    else:
+        raise Exception('noise ' + noise + ' is undefined.')
+    return cause_dict
+
+
+# add missing value in dataset
+def add_missing(data, cause_dict):
+    data_missing = deepcopy(data)
+    m_min = 0.1
+    m_max = 0.6
+    for var in cause_dict.keys():
+        if len(cause_dict[var]) == 0:
+            m = np.random.uniform(m_min, m_max)
+            data_missing[var][np.random.uniform(size=len(data)) < m] = None
+        else:
+            for cause in cause_dict[var]:
+                if data[cause].dtype == 'category':
+                    state_m = data[cause].mode()[0]
+                    data_missing[var][(np.random.uniform(size=len(data)) < m_max) & (data[cause] == state_m)] = None
+                    data_missing[var][(np.random.uniform(size=len(data)) < m_min) & (data[cause] != state_m)] = None
+                elif data[cause].dtype == 'float' or data[cause].dtype == 'int':
+                    thres = data[cause].quantile(0.2)
+                    data_missing[var][(np.random.uniform(size=len(data)) < m_max) & (data[cause] < thres)] = None
+                    data_missing[var][(np.random.uniform(size=len(data)) < m_min) & (data[cause] >= thres)] = None
+                else:
+                    raise Exception('data type ' + data[cause].dtype + ' is not supported.')
+    return data_missing
 
 
 def pairwise(data, varnames, vars, cause_list, cache_data, cache_weight, method):
@@ -98,7 +196,7 @@ def find_causes(data, test_function='default', alpha=0.01):
             test_function = 'g_test'
     elif all(data[var].dtype.name != 'category' for var in data):
         if test_function == 'default':
-            test_function = 'pearson_test'
+            test_function = 'zf_test'
         factor = False
     else:
         raise Exception('Mixed data is not supported.')
@@ -157,6 +255,167 @@ def from_bnlearn(dag, varnames):
         output[node]['nei'] = list(
             base.setdiff(base.setdiff(bnlearn.nbr(dag, node), bnlearn.parents(dag, node)), bnlearn.children(dag, node)))
     return output
+
+
+# random orient a CPDAG to a DAG
+def random_orient(cpdag):
+    undirected_edges = []
+    for var in cpdag:
+        for nei in cpdag[var]['nei']:
+            edge = sorted([var, nei])
+            if edge not in undirected_edges:
+                undirected_edges.append(edge)
+    random.shuffle(undirected_edges)
+    orient_state = []
+    orient_history = []
+    dag = deepcopy(cpdag)
+    index = 0
+    while len(undirected_edges):
+        edge = undirected_edges[index]
+        sin_flag_temp, sin_direction_temp = sin_path_check(dag, edge[0], edge[1])
+        v_flag_temp, v_direction_temp = v_check(dag, edge[0], edge[1])
+        dag[edge[0]]['nei'].remove(edge[1])
+        dag[edge[1]]['nei'].remove(edge[0])
+        if (not sin_flag_temp) & (not v_flag_temp):
+            orient_history.append(random.randint(0, 1))
+            if orient_history[-1] == 0:
+                dag[edge[0]]['par'].append(edge[1])
+            else:
+                dag[edge[1]]['par'].append(edge[0])
+            orient_state.append(0)
+            index += 1
+        elif sin_flag_temp & (not v_flag_temp):
+            dag[sin_direction_temp[1]]['par'].append(sin_direction_temp[0])
+            if sin_direction_temp[1] == edge[0]:
+                orient_history.append(0)
+            else:
+                orient_history.append(1)
+            orient_state.append(1)
+            index += 1
+        elif (not sin_flag_temp) & v_flag_temp & (v_direction_temp != 'both'):
+            dag[v_direction_temp[1]]['par'].append(v_direction_temp[0])
+            if v_direction_temp[1] == edge[0]:
+                orient_history.append(0)
+            else:
+                orient_history.append(1)
+            orient_state.append(1)
+            index += 1
+        elif sin_flag_temp & v_flag_temp & (v_direction_temp == sin_direction_temp):
+            dag[v_direction_temp[1]]['par'].append(v_direction_temp[0])
+            if v_direction_temp[1] == edge[0]:
+                orient_history.append(0)
+            else:
+                orient_history.append(1)
+            orient_state.append(1)
+            index += 1
+        else:
+            if 0 in orient_state[::-1]:
+                last = len(orient_state) - 1 - orient_state[::-1].index(0)
+                dag = deepcopy(cpdag)
+                orient_history_temp = []
+                for i in range(last):
+                    edge = undirected_edges[i]
+                    dag[edge[0]]['nei'].remove(edge[1])
+                    dag[edge[1]]['nei'].remove(edge[0])
+                    if orient_history[i] == 0:
+                        dag[edge[0]]['par'].append(edge[1])
+                    else:
+                        dag[edge[1]]['par'].append(edge[0])
+                    orient_history_temp.append(orient_history[i])
+                edge = undirected_edges[last]
+                dag[edge[0]]['nei'].remove(edge[1])
+                dag[edge[1]]['nei'].remove(edge[0])
+                if orient_history[last] == 0:
+                    dag[edge[1]]['par'].append(edge[0])
+                    orient_history_temp.append(1)
+                else:
+                    dag[edge[0]]['par'].append(edge[1])
+                    orient_history_temp.append(0)
+                index = last + 1
+                orient_state = orient_state[: last + 1]
+                orient_state[last] = 1
+                orient_history = deepcopy(orient_history_temp)
+            else:
+                orient_history.append(random.randint(0, 1))
+                if orient_history[-1] == 0:
+                    dag[edge[0]]['par'].append(edge[1])
+                else:
+                    dag[edge[1]]['par'].append(edge[0])
+                orient_state.append(0)
+                index += 1
+
+        if index == len(undirected_edges):
+            break
+    return dag
+
+
+# single direction path check
+def sin_path_check(dag, var1, var2):
+    sin_flag = False
+    sin_direction = None
+    # check single direction path var1 -> ... -> var2
+    unchecked = deepcopy(dag[var2]['par'])
+    checked = []
+    while unchecked:
+        if sin_flag:
+            break
+        unchecked_copy = deepcopy(unchecked)
+        for dag_par in unchecked_copy:
+            if var1 in dag[dag_par]['par']:
+                sin_flag = True
+                sin_direction = [var1, var2]
+                break
+            else:
+                for key in dag[dag_par]['par']:
+                    if key not in checked:
+                        unchecked.append(key)
+            unchecked.remove(dag_par)
+            checked.append(dag_par)
+
+    # check single direction path var2 -> ... -> var1
+    if not sin_flag:
+        unchecked = deepcopy(dag[var1]['par'])
+        checked = []
+        while unchecked:
+            if sin_flag:
+                break
+            unchecked_copy = deepcopy(unchecked)
+            for dag_par in unchecked_copy:
+                if var2 in dag[dag_par]['par']:
+                    sin_flag = True
+                    sin_direction = [var2, var1]
+                    break
+                else:
+                    for key in dag[dag_par]['par']:
+                        if key not in checked:
+                            unchecked.append(key)
+                unchecked.remove(dag_par)
+                checked.append(dag_par)
+    return sin_flag, sin_direction
+
+
+# v-structure check
+def v_check(dag, var1, var2):
+    v_flag1 = False
+    v_flag2 = False
+    if len(dag[var1]['par']):
+        for par in dag[var1]['par']:
+            if (var2 not in dag[par]['nei']) and (var2 not in dag[par]['par']) and (par not in dag[var2]['par']):
+                v_flag1 = True
+                break
+    if len(dag[var2]['par']):
+        for par in dag[var2]['par']:
+            if (var1 not in dag[par]['nei']) & (var1 not in dag[par]['par']) & (par not in dag[var1]['par']):
+                v_flag2 = True
+                break
+    if v_flag1 & (not v_flag2):
+        return v_flag1, [var1, var2]
+    elif (not v_flag1) & v_flag2:
+        return v_flag2, [var2, var1]
+    elif v_flag1 & v_flag2:
+        return True, 'both'
+    else:
+        return False, None
 
 
 # statistical G2 test
@@ -233,8 +492,7 @@ def pearson_test(data, cols):
         return pg.partial_corr(data, data.columns[cols[0]], data.columns[cols[1]])['p-val'][0]
     elif len(cols) > 2:
         return \
-            pg.partial_corr(data, data.columns[cols[0]], data.columns[cols[1]], list(data.columns[cols[2:]]))['p-val'][
-                0]
+        pg.partial_corr(data, data.columns[cols[0]], data.columns[cols[1]], list(data.columns[cols[2:]]))['p-val'][0]
     else:
         raise Exception('Length of input cols is less than 2')
 
@@ -249,38 +507,3 @@ def plot(dag, filename):
                 dot.node(parent)
             dot.edge(parent, node)
     dot.render(filename, view=True)
-=======
-import copy
-def cpdag(dag):
-    # convert a DAG to a CPDAG
-    cpdag = copy.deepcopy(dag)
-    for var in cpdag:
-        if (len(cpdag[var]['par']) > 1):
-            par_temp = copy.deepcopy(cpdag[var]['par'])
-            for par in cpdag[var]['par']:
-                par_temp.remove(par)
-                for par_oth in par_temp:
-                    if ((par in cpdag[par_oth]['par']) & (len(cpdag[par_oth]['par']) == 1)) | (par in cpdag[par_oth]['nei']) | ((par_oth in cpdag[par]['par']) & (len(cpdag[par]['par']) == 1)) | (par_oth in cpdag[par]['nei']):
-                        if par not in cpdag[var]['nei']:
-                            cpdag[var]['nei'].append(par)
-                        if var not in cpdag[par]['nei']:
-                            cpdag[par]['nei'].append(var)
-                        if par in cpdag[var]['par']:
-                            cpdag[var]['par'].remove(par)
-                        if par_oth not in cpdag[var]['nei']:
-                            cpdag[var]['nei'].append(par_oth)
-                        if var not in cpdag[par_oth]['nei']:
-                            cpdag[par_oth]['nei'].append(var)
-                        if par_oth in cpdag[var]['par']:
-                            cpdag[var]['par'].remove(par_oth)
-        elif (len(cpdag[var]['par']) != 0):
-            par = dag[var]['par'][0]
-            while (len(dag[par]['par']) == 1):
-                par = dag[par]['par'][0]
-            if (len(dag[par]['par']) == 0):
-                cpdag[var]['nei'].extend(cpdag[var]['par'])
-                if var not in cpdag[cpdag[var]['par'][0]]['nei']:
-                    cpdag[cpdag[var]['par'][0]]['nei'].append(var)
-                cpdag[var]['par'] = []
-    return cpdag
->>>>>>> 2b4fdb79ca8c83b604ae05bf827b93917f42fdda
