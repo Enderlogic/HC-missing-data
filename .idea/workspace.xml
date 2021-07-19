@@ -5,31 +5,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/HC-missing-data.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/HC-missing-data.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BN_structure_learning.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/1/1_Clean.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/1/1_Clean.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/1/1_MAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/1/1_MAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/1/1_MCAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/1/1_MCAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/1/1_MNAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/1/1_MNAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2/2_Clean.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2/2_Clean.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2/2_MAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2/2_MAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2/2_MCAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2/2_MCAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2/2_MNAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2/2_MNAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/3/3_Clean.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/3/3_Clean.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/3/3_MAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/3/3_MAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/3/3_MCAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/3/3_MCAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/3/3_MNAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/3/3_MNAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/4/4_Clean.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/4/4_Clean.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/4/4_MAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/4/4_MAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/4/4_MCAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/4/4_MCAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/4/4_MNAR.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/4/4_MNAR.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/accessory.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/accessory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/hc.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/hc.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/score.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/score.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/1.rds" beforeDir="false" afterPath="$PROJECT_DIR$/network/1.rds" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/2.rds" beforeDir="false" afterPath="$PROJECT_DIR$/network/2.rds" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/3.rds" beforeDir="false" afterPath="$PROJECT_DIR$/network/3.rds" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/4.rds" beforeDir="false" afterPath="$PROJECT_DIR$/network/4.rds" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,6 +22,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager">
@@ -57,7 +33,7 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="$USER_HOME$/opt/anaconda3/envs/SFMV/bin/python" />
+      <option name="SDK_HOME" value="$USER_HOME$/opt/anaconda3/envs/HC-missing-data/bin/python" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
