@@ -53,6 +53,50 @@ def bic_counter(data, arities, cols, weight=None):
     return bic
 
 
+def nal(data, cols, weight = None):
+    arities = np.amax(data, axis=0) + 1
+    return nal_counter(data, arities, cols, weight = weight)
+
+
+@njit(fastmath=True)
+def nal_counter(data, arities, cols, alpha=0.3, weight = None):
+    strides = np.empty(len(cols), dtype=np.uint32)
+    idx = len(cols) - 1
+    stride = 1
+    while idx > -1:
+        strides[idx] = stride
+        stride *= arities[cols[idx]]
+        idx -= 1
+    N_ijk = np.zeros(stride)
+    N_ij = np.zeros(stride)
+    for rowidx in range(data.shape[0]):
+        idx_ijk = 0
+        idx_ij = 0
+        miss = False
+        for i in range(len(cols)):
+            if data[rowidx, cols[i]] == -1:
+                miss = True
+                break
+            idx_ijk += data[rowidx, cols[i]] * strides[i]
+            if i != 0:
+                idx_ij += data[rowidx, cols[i]] * strides[i]
+        if not miss:
+            N_ijk[idx_ijk] += 1
+            for i in range(arities[cols[0]]):
+                N_ij[idx_ij + i * strides[0]] += 1
+    nal = 0
+    for i in range(stride):
+        if N_ijk[i] != 0:
+            nal += N_ijk[i] * np.log(N_ijk[i] / N_ij[i])
+    if np.sum(N_ijk) == 0:
+        return np.nan
+    else:
+        nal /= np.sum(N_ijk)
+        # nal -= 0.5 * np.log(np.sum(N_ijk)) / np.sum(N_ijk) * (arities[cols[0]] - 1) * strides[0]
+        nal -= 1 / data.shape[1] * np.power(np.sum(N_ijk), -alpha) * (arities[cols[0]] - 1) * strides[0]
+        return nal
+
+
 def bic_g(data, cols, weights=None):
     X = data[:, cols[1:]]
     y = data[:, cols[0]]
@@ -125,7 +169,6 @@ def local_score(data, cols, score_function='default', weight=None):
     :param score_function: name of score function, currently support bic, nal
     :return: local score of node (cols[0]) given its parents (cols[1:])
     '''
-
     if len(data) == 0:
         return np.nan
     else:
