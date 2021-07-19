@@ -21,11 +21,10 @@ method_list = ['pw', 'ipw', 'aipw']
 model_list = range(1, 51)
 
 result_path = 'result/test.csv'
-# if path.isfile(result_path):
-#     result = pandas.read_csv(result_path)
-# else:
-#     result = pandas.DataFrame(columns=['dataset', 'datasize', 'noise', 'method', 'F1', 'SHD', 'cost'])
-result = pandas.DataFrame(columns=['dataset', 'datasize', 'noise', 'method', 'F1', 'SHD', 'cost'])
+if path.isfile(result_path):
+    result = pandas.read_csv(result_path)
+else:
+    result = pandas.DataFrame(columns=['dataset', 'datasize', 'noise', 'method', 'F1', 'SHD', 'cost'])
 
 for model in model_list:
     # load complete dataset
@@ -39,7 +38,7 @@ for model in model_list:
         data = bnlearn.rbn(dag_true, max(datasize_list))
         data = data[random.sample(list(data.columns), data.shape[1])]
         os.makedirs('data/' + str(model))
-        # data.to_csv(data_path, index = False)
+        data.to_csv(data_path, index = False)
     for datasize in datasize_list:
         if not any((result.dataset == model) & (result.datasize == datasize) & (result.noise == 'Clean') & (
                 result.method == 'complete')):
@@ -49,7 +48,7 @@ for model in model_list:
             result = result.append({'dataset': model, 'datasize': datasize, 'noise': 'Clean', 'method': 'complete',
                                     'F1': f1(cpdag_true, dag_learned), 'SHD': bnlearn.shd(cpdag_true, dag_learned)[0],
                                     'cost': cost}, ignore_index=True)
-            # result.to_csv('result/test.csv', index=False)
+            result.to_csv('result/test.csv', index=False)
             print(result.iloc[[-1]].to_string(index=False) + ' time:' + str(datetime.now().strftime("%H:%M:%S")))
     for noise in noise_list:
         # load missing dataset
@@ -58,7 +57,7 @@ for model in model_list:
             data_missing = pandas.read_csv(data_path, dtype='category')
         else:
             data_missing = add_missing(data, noise, dag_true)
-            # data_missing.to_csv(data_path, index = False)
+            data_missing.to_csv(data_path, index = False)
         for datasize in datasize_list:
             for method in method_list:
                 if not any((result.dataset == model) & (result.datasize == datasize) & (result.noise == noise) & (
@@ -70,5 +69,5 @@ for model in model_list:
                                             'F1': f1(dag_true, dag_learned),
                                             'SHD': bnlearn.shd(cpdag_true, dag_learned)[0], 'cost': cost},
                                            ignore_index=True)
-                    # result.to_csv('result/test.csv', index=False)
+                    result.to_csv('result/test.csv', index=False)
                     print(result.iloc[[-1]].to_string(index=False) + ' time:' + str(datetime.now().strftime("%H:%M:%S")))
