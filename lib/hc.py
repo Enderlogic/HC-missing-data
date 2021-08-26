@@ -56,7 +56,7 @@ def hc(data, method='complete', score_function='default', debug=False):
             score_function = 'bic_g'
     dc = data.nunique() == 1
     dc = dc[dc].index.values
-    data = data.drop(dc, 1)
+    data = data.drop(dc, axis = 1)
     if method == 'lw':
         data_listwise = data.dropna()
         dag = bnlearn.hc(data_listwise, score_function=score_function, debug=debug)

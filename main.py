@@ -38,16 +38,15 @@ for model in model_list:
         data = bnlearn.rbn(dag_true, max(datasize_list))
         data = data[random.sample(list(data.columns), data.shape[1])]
         os.makedirs('data/' + str(model))
-        data.to_csv(data_path, index = False)
+        data.to_csv(data_path, index=False)
     for datasize in datasize_list:
         if not any((result.dataset == model) & (result.datasize == datasize) & (result.noise == 'Clean') & (
                 result.method == 'complete')):
             start = time.time()
             dag_learned = hc(data.head(datasize))
             cost = time.time() - start
-            result = result.append({'dataset': model, 'datasize': datasize, 'noise': 'Clean', 'method': 'complete',
-                                    'F1': f1(cpdag_true, dag_learned), 'SHD': bnlearn.shd(cpdag_true, dag_learned)[0],
-                                    'cost': cost}, ignore_index=True)
+            result.loc[len(result)] = [model, datasize, 'Clean', 'complete', f1(cpdag_true, dag_learned),
+                                       bnlearn.shd(cpdag_true, dag_learned)[0], cost]
             result.to_csv('result/test.csv', index=False)
             print(result.iloc[[-1]].to_string(index=False) + ' time:' + str(datetime.now().strftime("%H:%M:%S")))
     for noise in noise_list:
@@ -57,7 +56,7 @@ for model in model_list:
             data_missing = pandas.read_csv(data_path, dtype='category')
         else:
             data_missing = add_missing(data, noise, dag_true)
-            data_missing.to_csv(data_path, index = False)
+            data_missing.to_csv(data_path, index=False)
         for datasize in datasize_list:
             for method in method_list:
                 if not any((result.dataset == model) & (result.datasize == datasize) & (result.noise == noise) & (
@@ -65,9 +64,8 @@ for model in model_list:
                     start = time.time()
                     dag_learned = hc(data_missing.head(datasize), method=method)
                     cost = time.time() - start
-                    result = result.append({'dataset': model, 'datasize': datasize, 'noise': noise, 'method': method,
-                                            'F1': f1(dag_true, dag_learned),
-                                            'SHD': bnlearn.shd(cpdag_true, dag_learned)[0], 'cost': cost},
-                                           ignore_index=True)
+                    result.loc[len(result)] = [model, datasize, noise, method, f1(cpdag_true, dag_learned),
+                                               bnlearn.shd(cpdag_true, dag_learned)[0], cost]
                     result.to_csv('result/test.csv', index=False)
-                    print(result.iloc[[-1]].to_string(index=False) + ' time:' + str(datetime.now().strftime("%H:%M:%S")))
+                    print(
+                        result.iloc[[-1]].to_string(index=False) + ' time:' + str(datetime.now().strftime("%H:%M:%S")))
