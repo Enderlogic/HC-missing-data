@@ -122,7 +122,7 @@ def hc(data, method='complete', score_function='default', debug=False):
                         if par_cur not in cache_score[vj]:
                             cache_score[vj][par_cur] = {}
                         if W not in cache_score[vj][par_cur]:
-                            cols = [varnames.index(vj)] + [varnames.index(x) for x in varnames if x in par_cur]
+                            cols = [varnames.index(x) for x in (vj, ) + par_cur]
                             cache_score[vj][par_cur][W] = local_score(cache_data[W], cols, score_function,
                                                                       cache_weight[W])
                         # compute the local score for the searching graph
@@ -130,7 +130,7 @@ def hc(data, method='complete', score_function='default', debug=False):
                         if par_sea not in cache_score[vj]:
                             cache_score[vj][par_sea] = {}
                         if W not in cache_score[vj][par_sea]:
-                            cols = [varnames.index(vj)] + [varnames.index(x) for x in varnames if x in par_sea]
+                            cols = [varnames.index(x) for x in (vj, ) + par_sea]
                             cache_score[vj][par_sea][W] = local_score(cache_data[W], cols, score_function,
                                                                       cache_weight[W])
                         if cache_score[vj][par_sea][W] != np.nan:
@@ -168,15 +168,14 @@ def hc(data, method='complete', score_function='default', debug=False):
                         if par_cur_par_vi not in cache_score[par_vi]:
                             cache_score[par_vi][par_cur_par_vi] = {}
                         if W not in cache_score[par_vi][par_cur_par_vi]:
-                            cols = [varnames.index(par_vi)] + [varnames.index(x) for x in varnames if
-                                                               x in par_cur_par_vi]
+                            cols = [varnames.index(x) for x in (par_vi, ) + par_cur_par_vi]
                             cache_score[par_vi][par_cur_par_vi][W] = local_score(cache_data[W], cols, score_function,
                                                                                  cache_weight[W])
                         par_cur_vi = tuple(dag[vi]['par'])
                         if par_cur_vi not in cache_score[vi]:
                             cache_score[vi][par_cur_vi] = {}
                         if W not in cache_score[vi][par_cur_vi]:
-                            cols = [varnames.index(vi)] + [varnames.index(x) for x in varnames if x in par_cur_vi]
+                            cols = [varnames.index(x) for x in (vi, ) + par_cur_vi]
                             cache_score[vi][par_cur_vi][W] = local_score(cache_data[W], cols, score_function,
                                                                          cache_weight[W])
                         # compute the local score for the searching graph
@@ -184,15 +183,14 @@ def hc(data, method='complete', score_function='default', debug=False):
                         if par_sea_par_vi not in cache_score[par_vi]:
                             cache_score[par_vi][par_sea_par_vi] = {}
                         if W not in cache_score[par_vi][par_sea_par_vi]:
-                            cols = [varnames.index(par_vi)] + [varnames.index(x) for x in varnames if
-                                                               x in par_sea_par_vi]
+                            cols = [varnames.index(x) for x in (par_vi, ) + par_sea_par_vi]
                             cache_score[par_vi][par_sea_par_vi][W] = local_score(cache_data[W], cols,
                                                                                  score_function, cache_weight[W])
                         par_sea_vi = tuple([x for x in dag[vi]['par'] if x != par_vi])
                         if par_sea_vi not in cache_score[vi]:
                             cache_score[vi][par_sea_vi] = {}
                         if W not in cache_score[vi][par_sea_vi]:
-                            cols = [varnames.index(vi)] + [varnames.index(x) for x in varnames if x in par_sea_vi]
+                            cols = [varnames.index(x) for x in (vi, ) + par_sea_vi]
                             cache_score[vi][par_sea_vi][W] = local_score(cache_data[W], cols, score_function,
                                                                          cache_weight[W])
                         if cache_score[vi][par_cur_vi][W] != np.nan and cache_score[par_vi][par_sea_par_vi][
@@ -225,7 +223,7 @@ def hc(data, method='complete', score_function='default', debug=False):
                         if par_cur not in cache_score[vi]:
                             cache_score[vi][par_cur] = {}
                         if W not in cache_score[vi][par_cur]:
-                            cols = [varnames.index(vi)] + [varnames.index(x) for x in varnames if x in par_cur]
+                            cols = [varnames.index(x) for x in (vi, ) + par_cur]
                             cache_score[vi][par_cur][W] = local_score(cache_data[W], cols, score_function,
                                                                       cache_weight[W])
                         # compute the local score for the searching graph
@@ -233,7 +231,7 @@ def hc(data, method='complete', score_function='default', debug=False):
                         if par_sea not in cache_score[vi]:
                             cache_score[vi][par_sea] = {}
                         if W not in cache_score[vi][par_sea]:
-                            cols = [varnames.index(vi)] + [varnames.index(x) for x in varnames if x in par_sea]
+                            cols = [varnames.index(x) for x in (vi, ) + par_sea]
                             cache_score[vi][par_sea][W] = local_score(cache_data[W], cols, score_function,
                                                                       cache_weight[W])
                         if cache_score[vi][par_cur][W] != np.nan:
@@ -313,7 +311,7 @@ def hc(data, method='complete', score_function='default', debug=False):
                         start_time = time.time()
                         par_sea = tuple(sorted(dag[vj]['par'] + [vi]))
                         if par_sea not in cache[vj]:
-                            cols = [varnames.index(vj)] + [varnames.index(x) for x in varnames if x in par_sea]
+                            cols = [varnames.index(x) for x in (vj, ) + par_sea]
                             cache[vj][par_sea] = local_score(data, cols, score_function)
                         time_score += time.time() - start_time
                         diff_temp = cache[vj][par_sea] - cache[vj][tuple(dag[vj]['par'])]
@@ -333,12 +331,11 @@ def hc(data, method='complete', score_function='default', debug=False):
                         start_time = time.time()
                         par_sea_par_vi = tuple(sorted(dag[par_vi]['par'] + [vi]))
                         if par_sea_par_vi not in cache[par_vi]:
-                            cols = [varnames.index(par_vi)] + [varnames.index(x) for x in varnames if
-                                                               x in par_sea_par_vi]
+                            cols = [varnames.index(x) for x in (par_vi, ) + par_sea_par_vi]
                             cache[par_vi][par_sea_par_vi] = local_score(data, cols, score_function)
                         par_sea_vi = tuple([x for x in dag[vi]['par'] if x != par_vi])
                         if par_sea_vi not in cache[vi]:
-                            cols = [varnames.index(vi)] + [varnames.index(x) for x in varnames if x in par_sea_vi]
+                            cols = [varnames.index(x) for x in (vi, ) + par_sea_vi]
                             cache[vi][par_sea_vi] = local_score(data, cols, score_function)
                         time_score += time.time() - start_time
                         diff_temp = cache[par_vi][par_sea_par_vi] + cache[vi][par_sea_vi] - cache[par_vi][
@@ -354,7 +351,7 @@ def hc(data, method='complete', score_function='default', debug=False):
                     start_time = time.time()
                     par_sea = tuple([x for x in dag[vi]['par'] if x != par_vi])
                     if par_sea not in cache[vi]:
-                        cols = [varnames.index(vi)] + [varnames.index(x) for x in varnames if x in par_sea]
+                        cols = [varnames.index(x) for x in (vi, ) + par_sea]
                         cache[vi][par_sea] = local_score(data, cols, score_function)
                     time_score += time.time() - start_time
                     diff_temp = cache[vi][par_sea] - cache[vi][tuple(dag[vi]['par'])]
