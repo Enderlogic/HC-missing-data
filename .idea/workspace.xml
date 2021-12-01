@@ -2,21 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d89c349b-1620-426f-ba7b-1dc574cc55d7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/HC-missing-data.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/HC-missing-data.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/accessory.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/accessory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/hc.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/hc.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/score.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/score.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/sparse.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/1.rds" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/2.rds" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/3.rds" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/4.rds" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/network/5.rds" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/result/.Rhistory" beforeDir="false" afterPath="$PROJECT_DIR$/result/.Rhistory" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/result/plot_result.R" beforeDir="false" afterPath="$PROJECT_DIR$/result/plot_result.R" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,7 +117,7 @@
       <workItem from="1637467126265" duration="29890000" />
       <workItem from="1637804547326" duration="2036000" />
       <workItem from="1638239830102" duration="5019000" />
-      <workItem from="1638252578010" duration="16555000" />
+      <workItem from="1638252578010" duration="16922000" />
     </task>
     <servers />
   </component>
