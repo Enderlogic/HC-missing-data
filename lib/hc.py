@@ -3,6 +3,7 @@ import time
 import numpy as np
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
+from rpy2.robjects.vectors import ListVector
 
 pandas2ri.activate()
 from lib.accessory import to_bnlearn, find_causes, pairwise
@@ -385,6 +386,8 @@ def hc(data, method='complete', score_function='default', debug=False):
                         (time_total - time_preprocess - time_checkcycle - time_score) / time_total * 100))
     elif method == 'bnlearn':
         dag = bnlearn.hc(data, score=score_function, debug=debug)
+    elif method == 'sem':
+        dag = bnlearn.structural_em(data, maximize_args=ListVector({'score': score_function}), debug=debug)
     else:
         raise Exception('The input method: ' + method + ' is invalid.')
     if len(dc):

@@ -53,13 +53,49 @@ def bic_counter(data, arities, cols, weight=None):
     return bic
 
 
-def nal(data, cols, weight = None):
+def aic(data, cols, weight=None):
     arities = np.amax(data, axis=0) + 1
-    return nal_counter(data, arities, cols, weight = weight)
+    return aic_counter(data, arities, cols, weight)
 
 
 @njit(fastmath=True)
-def nal_counter(data, arities, cols, alpha=0.3, weight = None):
+def aic_counter(data, arities, cols, weight=None):
+    if weight is None:
+        weight = np.ones(data.shape[0])
+    strides = np.empty(len(cols), dtype=np.uint32)
+    idx = len(cols) - 1
+    stride = 1
+    while idx > -1:
+        strides[idx] = stride
+        stride *= arities[cols[idx]]
+        idx -= 1
+    N_ijk = np.zeros(stride)
+    N_ij = np.zeros(stride)
+    for rowidx in range(data.shape[0]):
+        idx_ijk = 0
+        idx_ij = 0
+        for i in range(len(cols)):
+            idx_ijk += data[rowidx, cols[i]] * strides[i]
+            if i != 0:
+                idx_ij += data[rowidx, cols[i]] * strides[i]
+        N_ijk[idx_ijk] += weight[rowidx]
+        for i in range(arities[cols[0]]):
+            N_ij[idx_ij + i * strides[0]] += weight[rowidx]
+    aic = 0
+    for i in range(stride):
+        if N_ijk[i] != 0:
+            aic += N_ijk[i] * np.log(N_ijk[i] / N_ij[i])
+    aic -= 4 * (arities[cols[0]] - 1) * strides[0]
+    return aic
+
+
+def nal(data, cols, weight=None):
+    arities = np.amax(data, axis=0) + 1
+    return nal_counter(data, arities, cols, weight=weight)
+
+
+@njit(fastmath=True)
+def nal_counter(data, arities, cols, alpha=0.3, weight=None):
     strides = np.empty(len(cols), dtype=np.uint32)
     idx = len(cols) - 1
     stride = 1

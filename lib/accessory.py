@@ -19,76 +19,137 @@ pandas2ri.activate()
 random.seed(941214)
 
 
+def vstruct(dag):
+    vst = []
+    for node in bnlearn.nodes(dag):
+        parents = bnlearn.parents(dag, node)
+        if len(parents) > 1:
+            for i in range(len(parents) - 1):
+                for j in range(i + 1, len(parents)):
+                    if parents[i] not in bnlearn.nbr(dag, parents[j]):
+                        vst.append([parents[i], node, parents[j]])
+    return np.array(vst)
+
+
+
 # create missing mechanism
-# def miss_mechanism(dag, noise='MAR', rom=0.5):
-#     '''
-#
-#     :param dag: true DAG
-#     :param noise: type of missing mechanism
-#     :param rom: ratio of missing variables
-#     :return: parent of missingness for each partially observed variable
-#     '''
-#     cause_dict = {}
-#     if noise == 'MCAR':
-#         vars_miss = random.sample(list(bnlearn.nodes(dag)), round(len(bnlearn.nodes(dag)) * rom))
-#         for var in vars_miss:
-#             cause_dict[var] = []
-#     elif noise == 'MAR':
-#         varnames = list(bnlearn.nodes(dag))
-#         nom = round(len(varnames) * rom)
-#         noc = len(varnames) - nom
-#         vstructs = np.array(bnlearn.vstructs(dag))
-#         vstructs = vstructs.reshape(3, int(len(vstructs) / 3))
-#         vars_miss = []
-#         vars_comp = []
-#         for i in range(vstructs.shape[1]):
-#             if len(vars_comp) != noc or (len(vars_comp) == noc and vstructs[1, i] in vars_comp):
-#                 if vstructs[0, i] not in vars_miss + vars_comp:
-#                     cause_dict[vstructs[0, i]] = [vstructs[1, i]]
-#                     vars_miss.append(vstructs[0, i])
-#                     vars_comp = list(set(vars_comp + [vstructs[1, i]]))
-#                 elif vstructs[2, i] not in vars_miss + vars_comp:
-#                     cause_dict[vstructs[2, i]] = [vstructs[1, i]]
-#                     vars_miss.append(vstructs[2, i])
-#                     vars_comp = list(set(vars_comp + [vstructs[1, i]]))
-#                 if len(vars_miss) == nom:
-#                     break
-#         if len(vars_miss) < nom:
-#             vars_miss2 = random.sample([x for x in varnames if x not in vars_miss + vars_comp], nom - len(vars_miss))
-#             vars_comp = [x for x in varnames if x not in vars_miss + vars_miss2]
-#             for var in vars_miss2:
-#                 nbr = list(bnlearn.nbr(dag, var))
-#                 if any(item in vars_comp for item in nbr):
-#                     cause_dict[var] = random.sample([x for x in nbr if x in vars_comp], 1)
-#                 else:
-#                     cause_dict[var] = random.sample(vars_comp, 1)
-#     elif noise == 'MNAR':
-#         varnames = list(bnlearn.nodes(dag))
-#         nom = round(len(varnames) * rom)
-#         vstructs = np.array(bnlearn.vstructs(dag))
-#         vstructs = vstructs.reshape(3, int(len(vstructs) / 3))
-#         vars_miss = []
-#         for i in range(vstructs.shape[1]):
-#             if vstructs[0, i] not in cause_dict:
-#                 cause_dict[vstructs[0, i]] = [vstructs[1, i]]
-#                 vars_miss = list(set(vars_miss + [vstructs[0, i], vstructs[1, i]]))
-#             elif vstructs[2, i] not in cause_dict:
-#                 cause_dict[vstructs[2, i]] = [vstructs[1, i]]
-#                 vars_miss = list(set(vars_miss + [vstructs[2, i], vstructs[1, i]]))
-#             if len(vars_miss) >= nom:
-#                 break
-#         if len(vars_miss) < nom:
-#             vars_miss2 = random.sample([x for x in varnames if x not in vars_miss], nom - len(vars_miss))
-#             vars_comp = [x for x in varnames if x not in vars_miss + vars_miss2]
-#             for var in vars_miss2:
-#                 nbr = list(bnlearn.nbr(dag, var))
-#                 if any(item not in vars_comp for item in nbr):
-#                     cause_dict[var] = random.sample([x for x in nbr if x not in vars_comp + [var]], 1)
-#                 else:
-#                     cause_dict[var] = random.sample([x for x in varnames if x not in vars_comp + [var]], 1)
-#     else:
-#         raise Exception('noise ' + noise + ' is undefined.')
-#     return cause_dict
+def miss_mechanism_complex(dag, noise='MAR', rom=0.5):
+    '''
+
+    :param dag: true DAG
+    :param noise: type of missing mechanism
+    :param rom: ratio of missing variables
+    :return: parent of missingness for each partially observed variable
+    '''
+    cause_dict = {}
+    if noise == 'MCAR':
+        vars_miss = random.sample(list(bnlearn.nodes(dag)), round(len(bnlearn.nodes(dag)) * rom))
+        for var in vars_miss:
+            cause_dict[var] = []
+    elif noise == 'MAR':
+        varnames = list(bnlearn.nodes(dag))
+        nom = round(len(varnames) * rom)
+        noc = len(varnames) - nom
+        vst = vstruct(dag)
+        vars_miss = []
+        vars_comp = []
+        for i in range(vst.shape[0]):
+            if len(vars_comp) != noc or (len(vars_comp) == noc and vst[i, 1] in vars_comp):
+                if vst[i, 0] not in vars_miss + vars_comp:
+                    cause_dict[vst[i, 0]] = [vst[i, 1]]
+                    vars_miss.append(vst[i, 0])
+                    vars_comp = list(set(vars_comp + [vst[i, 1]]))
+                    if len(vars_miss) == nom:
+                        break
+                if vst[i, 2] not in vars_miss + vars_comp:
+                    cause_dict[vst[i, 2]] = [vst[i, 1]]
+                    vars_miss.append(vst[i, 2])
+                    vars_comp = list(set(vars_comp + [vst[i, 1]]))
+                    if len(vars_miss) == nom:
+                        break
+        if len(vars_miss) < nom:
+            vars_miss2 = random.sample([x for x in varnames if x not in vars_miss + vars_comp], nom - len(vars_miss))
+            vars_comp = [x for x in varnames if x not in vars_miss + vars_miss2]
+            for var in vars_miss2:
+                nbr = list(bnlearn.nbr(dag, var))
+                if any(item in vars_comp for item in nbr):
+                    cause_dict[var] = random.sample([x for x in nbr if x in vars_comp], 1)
+                else:
+                    cause_dict[var] = random.sample(vars_comp, 1)
+    elif noise == 'MNAR':
+        varnames = list(bnlearn.nodes(dag))
+        nom_mar = round(len(varnames) * rom / 2)
+        nom_mnar = round(len(varnames) * rom) - nom_mar
+        vst = vstruct(dag)
+        vars_miss_mnar = []
+        vars_miss = []
+        vars_comp = []
+        # MNAR variables assignment
+        for i in range(vst.shape[0]):
+            if vst[i, 0] not in cause_dict:
+                # set vstructs[0, i] as a partially observed variable caused by MNAR
+                cause_dict[vst[i, 0]] = [vst[i, 1]]
+                vars_miss_mnar.append(vst[i, 0])
+                vars_miss = list(set(vars_miss + [vst[i, 0], vst[i, 1]]))
+                if len(vars_miss_mnar) == nom_mnar:
+                    break
+            if vst[i, 2] not in cause_dict:
+                # set vstructs[2, i] as a partially observed variable caused by MNAR
+                cause_dict[vst[i, 2]] = [vst[i, 1]]
+                vars_miss_mnar.append(vst[i, 2])
+                vars_miss = list(set(vars_miss + [vst[i, 2], vst[i, 1]]))
+                if len(vars_miss_mnar) == nom_mnar:
+                    break
+        # MAR variables assignment
+        vars_miss_mar = [v for v in vars_miss if v not in vars_miss_mnar]
+        for var in vars_miss_mar:
+            if var in vst[:, 0]:
+                for id in np.where(vst[:, 0] == var):
+                    if vst[id[0], 1] not in vars_miss:
+                        cause_dict[var] = [vst[id[0], 1]]
+                        vars_comp = list(set(vars_comp + [vst[id[0], 1]]))
+            if var not in cause_dict and var in vst[:, 2]:
+                for id in np.where(vst[:, 2] == var):
+                    if vst[id[0], 1] not in vars_miss:
+                        cause_dict[var] = [vst[id[0], 1]]
+                        vars_comp = list(set(vars_comp + [vst[id[0], 1]]))
+            if var not in cause_dict:
+                nbr = list(bnlearn.nbr(dag, str(var)))
+                if any(item not in vars_miss for item in nbr):
+                    cause_dict[var] = random.sample([x for x in nbr if x not in vars_miss], 1)
+                else:
+                    cause_dict[var] = random.sample([x for x in varnames if x not in vars_miss], 1)
+                vars_comp = list(set(vars_comp + cause_dict[var]))
+        if len(vars_miss_mar) < nom_mar:
+            for i in range(vst.shape[0]):
+                if vst[i, 0] not in vars_miss + vars_comp and vst[i, 1] not in vars_miss:
+                    # set vstructs[0, i] as a partially observed variable caused by MAR
+                    cause_dict[vst[i, 0]] = [vst[i, 1]]
+                    vars_miss.append(vst[i, 0])
+                    vars_comp = list(set(vars_comp + [vst[i, 1]]))
+                    if len(vars_miss) == nom_mar + nom_mnar:
+                        break
+                if vst[i, 2] not in vars_miss + vars_comp and vst[i, 1] not in vars_miss:
+                    # set vstructs[2, i] as a partially observed variable caused by MAR
+                    cause_dict[vst[i, 2]] = [vst[i, 1]]
+                    vars_miss.append(vst[i, 2])
+                    vars_comp = list(set(vars_comp + [vst[i, 1]]))
+                    if len(vars_miss) == nom_mar + nom_mnar:
+                        break
+            if len(vars_miss) < nom_mar + nom_mnar:
+                vars_miss_mar = random.sample([x for x in varnames if x not in vars_miss + vars_comp],
+                                              nom_mar + nom_mnar - len(vars_miss))
+                vars_miss = list(set(vars_miss + vars_miss_mar))
+                for var in vars_miss_mar:
+                    nbr = list(bnlearn.nbr(dag, var))
+                    if any(item not in vars_miss for item in nbr):
+                        cause_dict[var] = random.sample([x for x in nbr if x not in vars_miss], 1)
+                    else:
+                        cause_dict[var] = random.sample([x for x in varnames if x not in vars_miss], 1)
+    else:
+        raise Exception('noise ' + noise + ' is undefined.')
+    return cause_dict
+
 
 # create missing mechanism
 def miss_mechanism(dag, noise='MAR', rom=0.5):
