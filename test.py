@@ -33,4 +33,3 @@ for i in range(1, 51):
         result.loc[len(result)] = [str(i), 10000, 'MNAR', method, f1(dag, dag_learned),
                                    bnlearn.shd(bnlearn.cpdag(dag), dag_learned)[0], cost]
         print(result.iloc[[-1]].to_string(index=False) + ' time:' + str(datetime.now().strftime("%H:%M:%S")))
-a = 1
