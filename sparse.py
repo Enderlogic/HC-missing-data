@@ -15,13 +15,9 @@ from lib.hc import hc
 base, bnlearn = importr('base'), importr('bnlearn')
 base.set_seed(1009)
 random.seed(1009)
-# datasize_list = [100, 500, 1000, 5000, 10000]
-# noise_list = ['MCAR', 'MAR', 'MNAR']
-# method_list = ['pw', 'ipw', 'aipw', 'sem']
-
-datasize_list = [10000]
-noise_list = ['MNAR']
-method_list = []
+datasize_list = [100, 500, 1000, 5000, 10000]
+noise_list = ['MCAR', 'MAR', 'MNAR']
+method_list = ['pw', 'ipw', 'aipw', 'sem']
 model_list = range(1, 51)
 score_function = 'bic'
 
